@@ -50,7 +50,8 @@ class PysHTTPRedirectHandler(urllib.request.HTTPRedirectHandler):
 
 class Connection(object):
     def __init__(self , baseUrl , username , password , port=4040 , 
-            serverPath='/rest' , appName='py-sonic' , apiVersion=API_VERSION , insecure=False):
+            serverPath='/rest' , appName='py-sonic' , apiVersion=API_VERSION,
+            insecure=False):
         """
         This will create a connection to your subsonic server
 
@@ -81,6 +82,8 @@ class Connection(object):
                             to find the Subsonic version -> API version table.
                             This is useful if you are connecting to an older
                             version of Subsonic.
+        insecure:bool       This will allow you to use self signed
+                            certificates when connecting if set to True.
         """
         self._baseUrl = baseUrl
         self._username = username
@@ -90,12 +93,12 @@ class Connection(object):
         self._appName = appName
         self._serverPath = serverPath.strip('/')
         self._insecure = insecure
-        self._opener = self._getOpener(self._username , self._rawPass , insecure=self._insecure)
+        self._opener = self._getOpener(self._username , self._rawPass)
 
     # Properties
     def setBaseUrl(self , url):
         self._baseUrl = url
-        self._opener = self._getOpener(self._username , self._rawPass , insecure=self._insecure)
+        self._opener = self._getOpener(self._username , self._rawPass)
     baseUrl = property(lambda s: s._baseUrl , setBaseUrl)
 
     def setPort(self , port):
@@ -104,13 +107,13 @@ class Connection(object):
 
     def setUsername(self , username):
         self._username = username
-        self._opener = self._getOpener(self._username , self._rawPass , insecure=self._insecure)
+        self._opener = self._getOpener(self._username , self._rawPass)
     username = property(lambda s: s._username , setUsername)
 
     def setPassword(self , password):
         self._rawPass = password
         # Redo the opener with the new creds
-        self._opener = self._getOpener(self._username , self._rawPass , insecure=self._insecure)
+        self._opener = self._getOpener(self._username , self._rawPass)
     password = property(lambda s: s._rawPass , setPassword)
 
     apiVersion = property(lambda s: s._apiVersion)
@@ -2111,11 +2114,11 @@ class Connection(object):
         return res
 
     # Private internal methods
-    def _getOpener(self , username , passwd , insecure=None):
+    def _getOpener(self , username , passwd):
         b = str.encode('{0}:{1}'.format(username , passwd))
         creds = bytes.decode(b64encode(b))
         context = None
-        if insecure:
+        if self._insecure:
             context = ssl._create_unverified_context()
         opener = urllib.request.build_opener(PysHTTPRedirectHandler , 
             urllib.request.HTTPSHandler(context=context))
